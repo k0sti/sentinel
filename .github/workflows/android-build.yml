@@ -47,7 +47,18 @@ jobs:
         run: cd packages/app && bun run build
 
       - name: Init Capacitor Android
-        run: cd packages/app && bunx cap add android 2>/dev/null || true && bunx cap sync android
+        run: |
+          cd packages/app
+          bunx cap add android 2>/dev/null || true
+          bunx cap sync android
+          # background-runner needs JS engine AAR — copy from node_modules if cap sync missed it
+          AAR_SRC="node_modules/@capacitor/background-runner/android/src/main/libs/android-js-engine-release.aar"
+          if [ -f "$AAR_SRC" ]; then
+            for dir in android/capacitor-background-runner/src/main/libs android/app/libs; do
+              mkdir -p "$dir"
+              cp "$AAR_SRC" "$dir/"
+            done
+          fi
 
       - name: Build APK
         run: cd packages/app/android && ./gradlew assembleDebug
