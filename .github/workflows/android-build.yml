@@ -1,0 +1,59 @@
+name: Android Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/sentinel-core/**'
+      - 'packages/app/**'
+      - '.github/workflows/android-build.yml'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build WASM
+        run: cd crates/sentinel-core && wasm-pack build --target web --out-dir ../../packages/wasm
+
+      - name: Install dependencies
+        run: cd packages/app && bun install
+
+      - name: Build web app
+        run: cd packages/app && bun run build
+
+      - name: Init Capacitor Android
+        run: cd packages/app && bunx cap add android 2>/dev/null || true && bunx cap sync android
+
+      - name: Build APK
+        run: cd packages/app/android && ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentinel-debug.apk
+          path: packages/app/android/app/build/outputs/apk/debug/app-debug.apk
