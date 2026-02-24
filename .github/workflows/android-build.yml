@@ -60,6 +60,15 @@ jobs:
             done
           fi
 
+      - name: Upgrade AGP for androidx.core compatibility
+        run: |
+          cd packages/app/android
+          # androidx.core:1.17.0 requires AGP 8.9.1+
+          sed -i 's/com.android.application" version "8\.[0-9.]*"/com.android.application" version "8.9.3"/' app/build.gradle
+          sed -i 's/com.android.library" version "8\.[0-9.]*"/com.android.library" version "8.9.3"/' capacitor-*/build.gradle 2>/dev/null || true
+          # Also update the root build.gradle if it pins AGP
+          sed -i "s/classpath 'com.android.tools.build:gradle:8\.[0-9.]*'/classpath 'com.android.tools.build:gradle:8.9.3'/" build.gradle 2>/dev/null || true
+
       - name: Build APK
         run: cd packages/app/android && ./gradlew assembleDebug
 
