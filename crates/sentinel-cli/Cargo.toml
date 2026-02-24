@@ -1,0 +1,16 @@
+[package]
+name = "sentinel-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "sentinel"
+path = "src/main.rs"
+
+[dependencies]
+sentinel-core = { path = "../sentinel-core" }
+nostr-sdk = "0.37"
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json"] }
