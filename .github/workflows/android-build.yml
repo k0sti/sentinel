@@ -37,6 +37,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Android SDK 36
+        run: sdkmanager "platforms;android-36"
+
       - name: Build WASM
         run: cd crates/sentinel-core && wasm-pack build --target web --out-dir ../../packages/wasm
 
@@ -60,14 +63,21 @@ jobs:
             done
           fi
 
-      - name: Upgrade AGP for androidx.core compatibility
+      - name: Upgrade AGP and compileSdk for androidx.core compatibility
         run: |
           cd packages/app/android
-          # androidx.core:1.17.0 requires AGP 8.9.1+
-          sed -i 's/com.android.application" version "8\.[0-9.]*"/com.android.application" version "8.9.3"/' app/build.gradle
-          sed -i 's/com.android.library" version "8\.[0-9.]*"/com.android.library" version "8.9.3"/' capacitor-*/build.gradle 2>/dev/null || true
-          # Also update the root build.gradle if it pins AGP
-          sed -i "s/classpath 'com.android.tools.build:gradle:8\.[0-9.]*'/classpath 'com.android.tools.build:gradle:8.9.3'/" build.gradle 2>/dev/null || true
+          # androidx.core:1.17.0 requires AGP 8.9.1+ and compileSdk 36
+          find . -name "build.gradle" -exec sed -i \
+            -e 's/com.android.application" version "8\.[0-9.]*"/com.android.application" version "8.9.3"/' \
+            -e 's/com.android.library" version "8\.[0-9.]*"/com.android.library" version "8.9.3"/' \
+            -e "s/classpath 'com.android.tools.build:gradle:8\.[0-9.]*'/classpath 'com.android.tools.build:gradle:8.9.3'/" \
+            -e 's/compileSdk = 35/compileSdk = 36/' \
+            -e 's/compileSdkVersion 35/compileSdkVersion 36/' \
+            {} +
+          # Also handle variables.gradle if Capacitor uses it
+          find . -name "variables.gradle" -exec sed -i \
+            -e 's/compileSdkVersion = 35/compileSdkVersion = 36/' \
+            {} +
 
       - name: Build APK
         run: cd packages/app/android && ./gradlew assembleDebug
