@@ -3,3 +3,11 @@ target/
 packages/wasm/
 dist/
 *.apk
+
+# Android build artifacts
+packages/app/android/.gradle/
+packages/app/android/build/
+packages/app/android/app/build/
+packages/app/android/app/src/main/assets/public/
+packages/app/android/app/src/main/assets/capacitor.config.json
+packages/app/android/capacitor-cordova-android-plugins/build/
